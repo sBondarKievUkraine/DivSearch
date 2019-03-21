@@ -17,15 +17,9 @@ public class FinderTest {
     @Test
     public void findElementsByQueryTest() {
 
-//        String fileName = "sample-1-evil-gemini.html";
+        String cssQuery = "a[id=\"make-everything-ok-button\"]";
 
-//        String cssQuery = "div.make-everything-ok-button";
-//        String cssQuery = "div[id=\"make-everything-ok-button\"]";
-        String cssQuery = "button[class*=\"btn btn-success\"]";
-
-        Finder finder = new Finder();
-
-        Optional<Elements> elementsOpt = finder.findElementsByQuery(new FileReader(fileName).getXmlFile(), cssQuery);
+        Optional<Elements> elementsOpt = new Finder().findElementsByQuery(new FileReader(fileName).getXmlFile(), cssQuery);
 
         Optional<List<String>> elementsAttrsOpts = elementsOpt.map(buttons ->
                 {
