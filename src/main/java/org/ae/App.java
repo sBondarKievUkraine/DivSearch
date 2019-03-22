@@ -16,7 +16,9 @@ public class App {
         System.out.println("Qualification task is running.");
         String targetElementId = "make-everything-ok-button";
         String originFile = "sample-0-origin.html";
-        String sampleFile = "sample-1-evil-gemini.html";
+//        String sampleFile = "sample-1-evil-gemini.html";
+//        String sampleFile = "sample-2-container-and-clone.html";
+        String sampleFile = "sample-3-the-escape.html";
         if (args.length != 2) {
 //            throw new Exception("Wrong arguments. Must be: input_origin_file_path input_other_sample_file_path");
 
@@ -37,17 +39,32 @@ public class App {
         Optional<Attributes> stringifiedAttributesOpt = buttonOpt.map(button -> button.attributes());
 
 //        stringifiedAttributesOpt.ifPresent(attrs -> System.out.println("Target element attrs: " + attrs));
-        Attributes attributes = stringifiedAttributesOpt.get();
-        for (Attribute attribute : attributes.asList()) {
+        Attributes initialAttributes = stringifiedAttributesOpt.get();
+        Element element = null;
+        int bestMatcher = 0;
+        for (Attribute attribute : initialAttributes) {
             String cssQuery = String.format("a[%s=\"%s\"]", attribute.getKey(), attribute.getValue());
-//            System.out.println("cssQuery = " + cssQuery);
             Optional<Elements> elementsByQuery = finder.findElementsByQuery(new FileReader(sampleFile).getXmlFile(), cssQuery);
-            elementsByQuery.ifPresent(attrs -> System.out.println("Target element attrs: " + attrs));
+            for (Element e : elementsByQuery.get()) {
+                int matcherCount = 0;
+
+                for (Attribute foundedAttr : e.attributes()) {
+                    for (Attribute initAttr : initialAttributes) {
+
+                        if (foundedAttr.equals(initAttr)) {
+                            matcherCount++;
+                        }
+                    }
+                }
+                if (matcherCount > bestMatcher) {
+                    bestMatcher = matcherCount;
+                    element = e;
+                }
+            }
+
         }
-
-
-        //TODO get attributes from founded element and try to get query by it
-
+//        element.ifPresent(attrs -> System.out.println(cssQuery + ";\t " + attrs));
+        System.out.println("element = " + element);
 
     }
 }
