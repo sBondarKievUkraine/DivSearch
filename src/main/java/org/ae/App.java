@@ -5,10 +5,8 @@ import org.jsoup.nodes.Attributes;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.Optional;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class App {
 
@@ -19,6 +17,7 @@ public class App {
 //        String sampleFile = "sample-1-evil-gemini.html";
 //        String sampleFile = "sample-2-container-and-clone.html";
         String sampleFile = "sample-3-the-escape.html";
+//        String sampleFile = "sample-4-the-mash.html";
         if (args.length != 2) {
 //            throw new Exception("Wrong arguments. Must be: input_origin_file_path input_other_sample_file_path");
 
@@ -30,25 +29,23 @@ public class App {
         Finder finder = new Finder();
         Optional<Element> buttonOpt = finder.findElementById(new FileReader(originFile).getXmlFile(), targetElementId);
 
-        /*Optional<String> stringifiedAttributesOpt = buttonOpt.map(button ->
-                button.attributes().asList().stream()
-                        .map(attr -> attr.getKey() + " = " + attr.getValue())
-                        .collect(Collectors.joining(", "))
-        );*/
+        Optional<Attributes> finedAttributesOpt = buttonOpt.map(Element::attributes);
 
-        Optional<Attributes> stringifiedAttributesOpt = buttonOpt.map(button -> button.attributes());
-
-//        stringifiedAttributesOpt.ifPresent(attrs -> System.out.println("Target element attrs: " + attrs));
-        Attributes initialAttributes = stringifiedAttributesOpt.get();
-        Element element = null;
+        Attributes initialAttributes;
+        if (finedAttributesOpt.isPresent()) {
+            initialAttributes = finedAttributesOpt.get();
+        } else {
+            return;
+        }
+        Element bestMachElement = null;
         int bestMatcher = 0;
         for (Attribute attribute : initialAttributes) {
             String cssQuery = String.format("a[%s=\"%s\"]", attribute.getKey(), attribute.getValue());
             Optional<Elements> elementsByQuery = finder.findElementsByQuery(new FileReader(sampleFile).getXmlFile(), cssQuery);
-            for (Element e : elementsByQuery.get()) {
+            for (Element element : elementsByQuery.get()) {
                 int matcherCount = 0;
 
-                for (Attribute foundedAttr : e.attributes()) {
+                for (Attribute foundedAttr : element.attributes()) {
                     for (Attribute initAttr : initialAttributes) {
 
                         if (foundedAttr.equals(initAttr)) {
@@ -58,13 +55,24 @@ public class App {
                 }
                 if (matcherCount > bestMatcher) {
                     bestMatcher = matcherCount;
-                    element = e;
+                    bestMachElement = element;
                 }
             }
 
         }
-//        element.ifPresent(attrs -> System.out.println(cssQuery + ";\t " + attrs));
-        System.out.println("element = " + element);
+//        bestMachElement.ifPresent(attrs -> System.out.println(cssQuery + ";\t " + attrs));
+        System.out.println("bestMachElement = " + getXmlPath(bestMachElement));
 
+    }
+
+    private static String getXmlPath(Element element) {
+        StringBuffer path = new StringBuffer();
+        Elements parents = element.parents();
+        for (int i = parents.size()-1; i >= 0; i--) {
+            path.append(parents.get(i).tagName());
+            path.append(">");
+        }
+        path.append(element.tagName());
+        return String.valueOf(path);
     }
 }
